@@ -1,4 +1,4 @@
-name: LineageOS_Kernel_CI-aston
+name: LineageOS_Kernel_CI-giulia
 
 on:
   workflow_dispatch:
@@ -16,42 +16,42 @@ jobs:
 
     - name: Clone Kernel and Dependencies
       run: |
-        git clone https://github.com/LineageOS/android_kernel_oneplus_sm8550.git --depth=1 -b lineage-23.0 kernel/oneplus/sm8550
-        git clone https://github.com/LineageOS/android_kernel_oneplus_sm8550-modules.git --depth=1 -b lineage-23.0 kernel/oneplus/sm8550-modules
+        git clone https://github.com/oplus-giulia-dev/android_kernel_oneplus_sm8650.git --depth=1 -b lineage-23.0 kernel/oneplus/sm8650
+        git clone https://github.com/oplus-giulia-dev/android_kernel_oneplus_sm8650-modules.git --depth=1 -b lineage-23.0 kernel/oneplus/sm8650-modules
     
     - name: Setup release name
       run: |
         rm -rf ${GITHUB_WORKSPACE}/*.zip
-        cd kernel/oneplus/sm8550
+        cd kernel/oneplus/sm8650
         SUBLEVEL=$(grep "^SUBLEVEL =" Makefile | awk '{print $3}')
-        REL_NAME="LineageOS_OPSM8550-v5.15.${SUBLEVEL}-$(date +"%Y%m%d")"
+        REL_NAME="LineageOS_OPSM8650-v6.1.${SUBLEVEL}-$(date +"%Y%m%d")"
         echo "REL_NAME=${REL_NAME}" >> $GITHUB_ENV
 
     - name: Build Kernel with ksu
       run: |
-        cd kernel/oneplus/sm8550
-        build_sm8550 --clean --ksu
+        cd kernel/oneplus/sm8650
+        build_sm8650 --clean --ksu
         mv kernel.zip ${GITHUB_WORKSPACE}/ksu.zip
         git clean -fdx && find . -mindepth 1 -maxdepth 1 -type d -exec test -d "{}/.git" \; -print | xargs rm -rf && git reset --hard
         cd -
 
     - name: Build Kernel with ksu-next
       run: |
-        cd kernel/oneplus/sm8550
-        build_sm8550 --clean --ksu-next
+        cd kernel/oneplus/sm8650
+        build_sm8650 --clean --ksu-next
         mv kernel.zip ${GITHUB_WORKSPACE}/ksu-next.zip
         git clean -fdx && find . -mindepth 1 -maxdepth 1 -type d -exec test -d "{}/.git" \; -print | xargs rm -rf && git reset --hard
         cd -
 
-#    - name: Build Kernel with ksu-next + susfs
-#      run: |
-#        cd kernel/oneplus/sm8550
-#        build_sm8550 --clean --ksu-next-susfs
-#        mv kernel.zip ${GITHUB_WORKSPACE}/ksu-next-susfs.zip
-#        git clean -fdx && find . -mindepth 1 -maxdepth 1 -type d -exec test -d "{}/.git" \; -print | xargs rm -rf && git reset --hard
-#        cd -
+    - name: Build Kernel with ksu-next + susfs
+      run: |
+        cd kernel/oneplus/sm8650
+        build_sm8650 --clean --ksu-next-susfs
+        mv kernel.zip ${GITHUB_WORKSPACE}/ksu-next-susfs.zip
+        git clean -fdx && find . -mindepth 1 -maxdepth 1 -type d -exec test -d "{}/.git" \; -print | xargs rm -rf && git reset --hard
+        cd -
 
     - name: Create GitHub Release
       run: |
         cd ${GITHUB_WORKSPACE}
-        gh release create "$REL_NAME" --title "$REL_NAME" --notes "" ksu.zip ksu-next.zip
+        gh release create "$REL_NAME" --title "$REL_NAME" --notes "" ksu.zip ksu-next.zip ksu-next-susfs.zip
